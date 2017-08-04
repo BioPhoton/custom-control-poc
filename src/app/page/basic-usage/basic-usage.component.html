@@ -1,0 +1,55 @@
+<h1>Basic Usage</h1>
+
+<div class="row">
+  <div class="col-sm-12">
+
+    <form [formGroup]="basicFormGroup">
+
+      <div class="form-group">
+        <label>Native textbox
+          <small>(just to compare native functionality)</small>
+        </label>
+        <input type="text" autocomplete="false" class="form-control"
+          name="native"
+          formControlName="native">
+        <small class="form-text text-muted">{{nativeInput.value}}</small>
+      </div>
+
+      <div class="form-group">
+        <label>CustomValueAccessor - Implementation over a directive
+          <small>(compare custom controlValueAccessor with built in)</small>
+        </label>
+        <input type="text" autocomplete="false" class="form-control"
+          name="basic"
+          formControlName="basic"
+          customControl>
+        <small class="form-text text-muted">{{basicInput.value}}</small>
+      </div>
+
+      <button type="reset">Reset</button>
+      <button type="button" (click)="resetWithValue('Nei')">Reset with value
+      </button>
+
+    </form>
+    <div class="row">
+
+      <div class="col-6">
+
+        <app-control-state [control]="nativeInput">
+          Native Input
+        </app-control-state>
+
+      </div>
+
+      <div class="col-6">
+
+        <app-control-state [control]="basicInput">
+          CustomValueAccessor Directive
+        </app-control-state>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
