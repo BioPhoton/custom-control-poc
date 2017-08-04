@@ -1,20 +1,13 @@
 import {
-  Directive,
+  Component,
   ElementRef,
   forwardRef,
-  Host,
   Inject,
-  Input,
-  OnInit,
   Optional,
-  Renderer2,
-  SkipSelf
+  Renderer2
 } from '@angular/core'
 import {
-  AbstractControl,
-  AbstractControlDirective,
   COMPOSITION_BUFFER_MODE,
-  ControlContainer,
   ControlValueAccessor,
   NG_VALUE_ACCESSOR
 } from '@angular/forms'
@@ -29,12 +22,13 @@ function isAndroid(): boolean {
   return /android (\d+)/.test(userAgent.toLowerCase());
 }
 
-@Directive({
-  selector: '[customControl]',
+@Component({
+  selector: 'custom-control',
+  template: `<p></p>`,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => CustomValueAccessorDirective),
+      useExisting: forwardRef(() => CustomValueAccessorComponent),
       multi: true
     }
   ],
@@ -54,31 +48,10 @@ function isAndroid(): boolean {
      * Listening to the native blur event of the host element.
      * On blur we call the onTouched function from the formControl
      */
-    '(blur)': 'handleFocus(false)',
-    /*
-     * The compositionstart event is fired when the composition of a passage of text is prepared
-     * (similar to keydown for a keyboard input, but fires with special characters that require
-     * a sequence of keys and other inputs such as speech recognition or word suggestion on mobile).
-     */
-    '(compositionstart)': 'compositionStart()',
-    /*
-     * The compositionend event is fired when the composition of a passage of text has been completed
-     * or cancelled
-     * (fires with special characters that require a sequence of keys and other inputs such as
-     * speech recognition or word suggestion on mobile).
-     */
-    '(compositionend)': 'compositionEnd($event.target.value)'
+    '(blur)': 'handleFocus(false)'
   }
 })
-export class CustomValueAccessorDirective extends AbstractControlDirective implements ControlValueAccessor, OnInit {
-
-  // Reference to the formControl
-  control: AbstractControl;
-
-  @Input()
-  // The formControlName in the parent
-  protected formControlName: string;
-
+export class CustomValueAccessorComponent implements ControlValueAccessor {
   // The internal data model
   _value: any = '';
 
@@ -88,9 +61,6 @@ export class CustomValueAccessorDirective extends AbstractControlDirective imple
   // The internal disabled state
   _disabled: any = '';
 
-  // The internal state of composing input
-  protected composing = false;
-
   onChange = (_: any) => {
   };
   onTouched = () => {
@@ -98,10 +68,8 @@ export class CustomValueAccessorDirective extends AbstractControlDirective imple
 
   constructor(
     protected renderer: Renderer2, protected elementRef: ElementRef,
-    @Optional() @Inject(COMPOSITION_BUFFER_MODE) protected compositionMode: boolean,
-    @Optional() @Host() @SkipSelf() private parentFormContainer: ControlContainer
+    @Optional() @Inject(COMPOSITION_BUFFER_MODE) protected compositionMode: boolean
   ) {
-    super();
     if (this.compositionMode == null) {
       this.compositionMode = !isAndroid();
     }
@@ -141,9 +109,7 @@ export class CustomValueAccessorDirective extends AbstractControlDirective imple
    * calls writeValueFromViewToModel with new value
    */
   private handleInput(value: any): void {
-    if (!this.compositionMode || (this.compositionMode && !this.composing)) {
-      this.writeValueFromViewToModel(value);
-    }
+    this.writeValueFromViewToModel(value);
   }
 
   /*
@@ -156,31 +122,6 @@ export class CustomValueAccessorDirective extends AbstractControlDirective imple
       this.onTouched();
     }
     this.renderViewFocus(isFocus);
-  }
-
-  /*
-   * Is called when the compositionStart event is fired.
-   * It sets the internal composing state to true
-   */
-  compositionStart(): void {
-    this.composing = true;
-  }
-
-  /*
-   * Is called when the compositionEnd event is fired
-   * It sets the internal composing state to false
-   * and triggers the onChange function with the new value.
-   */
-  compositionEnd(value: any): void {
-    this.composing = false;
-    if (this.compositionMode) {
-      this.onChange(value);
-    }
-  }
-
-  // Lifecycle hooks ====================================================================
-  ngOnInit(): void {
-    this.updateFormControlRef()
   }
 
   // ControlValueAccessor ==================================================================
@@ -203,12 +144,6 @@ export class CustomValueAccessorDirective extends AbstractControlDirective imple
 
   renderViewFocus(isFocus: boolean): void {
     this.renderer.setProperty(this.elementRef.nativeElement, 'focus', isFocus);
-  }
-
-  // FormControl ==================================================================
-
-  updateFormControlRef() {
-    this.control = this.parentFormContainer['form'].controls[this.formControlName];
   }
 
 }

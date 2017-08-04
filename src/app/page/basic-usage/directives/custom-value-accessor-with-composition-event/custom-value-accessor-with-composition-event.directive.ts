@@ -4,22 +4,17 @@ import {
   forwardRef,
   Host,
   Inject,
-  Input,
   Optional,
   Renderer2,
   SkipSelf
 } from '@angular/core'
 import {
-  AbstractControl,
-  AbstractControlDirective,
   COMPOSITION_BUFFER_MODE,
   ControlContainer,
   ControlValueAccessor,
   NG_VALUE_ACCESSOR
 } from '@angular/forms'
 import {ɵgetDOM as getDOM} from '@angular/platform-browser'
-import 'rxjs/add/observable/combineLatest'
-import {Observable} from 'rxjs/Observable'
 
 /**
  * We must check whether the agent is Android because composition events
@@ -35,7 +30,7 @@ function isAndroid(): boolean {
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => AbstractCustomValueAccessorDirective),
+      useExisting: forwardRef(() => CustomValueAccessorWithCompositionEventDirective),
       multi: true
     }
   ],
@@ -71,15 +66,7 @@ function isAndroid(): boolean {
     '(compositionend)': 'compositionEnd($event.target.value)'
   }
 })
-export class AbstractCustomValueAccessorDirective extends AbstractControlDirective implements ControlValueAccessor {
-  // Reference to the formControl
-  control: AbstractControl;
-
-
-  @Input()
-  // The formControlName in the parent
-  protected formControlName: string;
-
+export class CustomValueAccessorWithCompositionEventDirective implements ControlValueAccessor {
   // The internal data model
   _value: any = '';
 
@@ -100,9 +87,7 @@ export class AbstractCustomValueAccessorDirective extends AbstractControlDirecti
   constructor(
     protected renderer: Renderer2, protected elementRef: ElementRef,
     @Optional() @Inject(COMPOSITION_BUFFER_MODE) protected compositionMode: boolean,
-    @Optional() @Host() @SkipSelf() private parentFormContainer: ControlContainer
   ) {
-    super();
     if (this.compositionMode == null) {
       this.compositionMode = !isAndroid();
     }
@@ -199,61 +184,6 @@ export class AbstractCustomValueAccessorDirective extends AbstractControlDirecti
 
   renderViewFocus(isFocus: boolean): void {
     this.renderer.setProperty(this.elementRef.nativeElement, 'focus', isFocus);
-  }
-
-
-  // FormControl ==================================================================
-
-  updateFormControlRef() {
-    this.control = this.parentFormContainer['form'].controls[this.formControlName];
-    this.setupResetObservable(this.control);
-  }
-
-  // ==============================================================================
-
-  setupResetObservable(control: AbstractControl) {
-    const statusChanges$ = control.statusChanges
-      .map((n: string) => {
-        return {
-          dirty: control.dirty,
-          pristine: control.pristine
-        }
-      });
-
-    const valueChanges$ = control.valueChanges
-      .map((n: string) => {
-        return {
-          valid: control.valid,
-          invalid: control.invalid,
-          touched: control.touched,
-          untouched: control.untouched
-        }
-      })
-
-    Observable.combineLatest(statusChanges$, valueChanges$, (statusState, valueState) => {
-      return {...statusState, ...valueState}
-    })
-      .filter((controlState) => {
-        const resetState = {
-          dirty: false,
-          pristine: true,
-          touched: false,
-          untouched: true
-        };
-
-        return Object
-          .keys(resetState)
-          .reduce((state, item) => {
-            return !state ? false : controlState[item] === resetState[item];
-          }, true)
-      })
-      .subscribe((controlState) => {
-        this.onResetEvent(controlState);
-      })
-  }
-
-  onResetEvent(isReset: any) {
-    console.log('onReset', isReset);
   }
 
 }

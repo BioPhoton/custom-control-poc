@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { NgModule, Optional, SkipSelf } from '@angular/core';
 import {validName} from './custom-validators/name.validator'
-import {NG_VALIDATORS} from '@angular/forms'
+import {NG_ASYNC_VALIDATORS, NG_VALIDATORS} from '@angular/forms'
+import {isBlacklistedName} from './custom-asyncvalidators/is-blacklisted-name.validator'
 
 @NgModule({
   imports: [
@@ -12,7 +13,8 @@ import {NG_VALIDATORS} from '@angular/forms'
   ],
   declarations: [],
   providers: [
-    {provide: NG_VALIDATORS, useValue: validName, multi: true}
+    {provide: NG_VALIDATORS, useValue: validName, multi: true},
+    {provide: NG_ASYNC_VALIDATORS, useValue: isBlacklistedName, multi: true}
   ]
 })
 export class CoreModule {
