@@ -85,13 +85,9 @@ export class CustomValueAccessorAndFormControlRefDirective extends AbstractContr
 
   constructor(
     protected renderer: Renderer2, protected elementRef: ElementRef,
-    @Optional() @Inject(COMPOSITION_BUFFER_MODE) protected compositionMode: boolean,
     @Optional() @Host() @SkipSelf() private parentFormContainer: ControlContainer
   ) {
     super();
-    if (this.compositionMode == null) {
-      this.compositionMode = !isAndroid();
-    }
   }
 
   /*
